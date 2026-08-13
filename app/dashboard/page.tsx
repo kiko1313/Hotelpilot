@@ -25,71 +25,97 @@ export default async function DashboardPage() {
   const available = rooms?.filter((r) => r.status === "AVAILABLE").length ?? 0;
 
   return (
-    <main className="min-h-screen bg-slate-50 p-6">
-      <header className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-slate-900">
-            🏨 HotelPilot AI
-          </h1>
-          <p className="text-sm text-slate-500">
-            Welcome, {employee?.full_name ?? user.email}
-            {employee?.role === "master_admin" ? " · Master Admin" : ""}
-          </p>
+    <main className="min-h-screen bg-ink-950">
+      <header className="border-b border-ink-700 bg-ink-900">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-brass-dim bg-ink-800">
+              <span className="font-display text-sm text-brass-bright">01</span>
+            </div>
+            <div>
+              <h1 className="font-display text-lg font-semibold text-parchment">
+                HotelPilot AI
+              </h1>
+              <p className="text-xs text-parchment-dim">
+                {employee?.full_name ?? user.email}
+                {employee?.role === "master_admin" ? " · Master Admin" : " · Staff"}
+              </p>
+            </div>
+          </div>
+          <form action="/auth/logout" method="post">
+            <button className="rounded-lg border border-ink-600 px-3 py-1.5 text-sm text-parchment-dim transition-colors hover:border-brass-dim hover:text-parchment">
+              Log out
+            </button>
+          </form>
         </div>
-        <form action="/auth/logout" method="post">
-          <button className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100">
-            Log out
-          </button>
-        </form>
       </header>
 
-      <section className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label="OCCUPIED" value={occupied} />
-        <StatCard label="AVAILABLE" value={available} />
-        <StatCard label="TODAY'S CHECK-INS" value="—" />
-        <StatCard label="TODAY'S CHECK-OUTS" value="—" />
-      </section>
+      <div className="mx-auto max-w-5xl px-6 py-8">
+        <section className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <StatCard label="Occupied" value={occupied} accent="ok" />
+          <StatCard label="Available" value={available} accent="brass" />
+          <StatCard label="Check-ins today" value="—" accent="neutral" />
+          <StatCard label="Check-outs today" value="—" accent="neutral" />
+        </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white">
-        <div className="border-b border-slate-200 px-4 py-3 text-sm font-medium text-slate-700">
-          Rooms
-        </div>
-        <ul className="divide-y divide-slate-100">
-          {(rooms ?? []).map((room) => (
-            <li
-              key={room.id}
-              className="flex items-center justify-between px-4 py-3 text-sm"
-            >
-              <span className="font-medium text-slate-900">
-                {room.room_number}
-              </span>
-              <span
-                className={
-                  room.status === "OCCUPIED"
-                    ? "rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700"
-                    : "rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500"
-                }
+        <section className="overflow-hidden rounded-2xl border border-ink-700 bg-ink-900">
+          <div className="border-b border-ink-700 px-5 py-3 text-sm font-medium text-parchment-dim">
+            Rooms
+          </div>
+          <ul className="divide-y divide-ink-800">
+            {(rooms ?? []).map((room) => (
+              <li
+                key={room.id}
+                className="flex items-center justify-between px-5 py-3.5"
               >
-                {room.status}
-              </span>
-            </li>
-          ))}
-          {(!rooms || rooms.length === 0) && (
-            <li className="px-4 py-6 text-center text-sm text-slate-400">
-              No rooms yet. Add rooms from Admin → Rooms.
-            </li>
-          )}
-        </ul>
-      </section>
+                <span className="font-display text-base text-parchment">
+                  Room {room.room_number}
+                </span>
+                <span
+                  className={
+                    room.status === "OCCUPIED"
+                      ? "rounded-full bg-ok/15 px-2.5 py-1 text-xs font-medium text-ok"
+                      : "rounded-full bg-brass/15 px-2.5 py-1 text-xs font-medium text-brass-bright"
+                  }
+                >
+                  {room.status === "OCCUPIED" ? "Occupied" : "Available"}
+                </span>
+              </li>
+            ))}
+            {(!rooms || rooms.length === 0) && (
+              <li className="px-5 py-10 text-center text-sm text-parchment-dim">
+                No rooms yet. Add rooms from Admin → Rooms.
+              </li>
+            )}
+          </ul>
+        </section>
+      </div>
     </main>
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string | number }) {
+function StatCard({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string | number;
+  accent: "ok" | "brass" | "neutral";
+}) {
+  const accentColor =
+    accent === "ok"
+      ? "text-ok"
+      : accent === "brass"
+      ? "text-brass-bright"
+      : "text-parchment";
+
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
-      <div className="text-xs font-medium text-slate-500">{label}</div>
-      <div className="mt-1 text-2xl font-semibold text-slate-900">{value}</div>
+    <div className="rounded-2xl border border-ink-700 bg-ink-900 p-4">
+      <div className="text-xs font-medium text-parchment-dim">{label}</div>
+      <div className={`mt-1 font-display text-3xl font-semibold ${accentColor}`}>
+        {value}
+      </div>
     </div>
   );
 }
