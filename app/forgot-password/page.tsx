@@ -26,10 +26,12 @@ export default function ForgotPasswordPage() {
 
     setLoading(false);
 
+    // Always show success, even if the email doesn't exist — this avoids
+    // revealing which emails have accounts (an account-enumeration leak).
     if (!resetError) {
       setSent(true);
     } else {
-      console.error("Reset password error:", resetError); setError(`Error: ${resetError.message}`);
+      setError("Something went wrong. Please try again.");
     }
   }
 

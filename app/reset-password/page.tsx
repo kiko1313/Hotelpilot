@@ -8,6 +8,9 @@ export default function ResetPasswordPage() {
   const router = useRouter();
   const supabase = createClient();
 
+  // Supabase's email link logs the user into a short-lived "recovery"
+  // session automatically when they land here. We just wait for that
+  // session to be present before letting them submit a new password.
   const [sessionReady, setSessionReady] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -24,6 +27,7 @@ export default function ResetPasswordPage() {
       }
     });
 
+    // Also check immediately in case the event already fired before mount.
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) setSessionReady(true);
     });
@@ -77,11 +81,11 @@ export default function ResetPasswordPage() {
         <div className="rounded-2xl border border-ink-600 bg-ink-900 p-6 shadow-xl shadow-black/30">
           {done ? (
             <p className="text-sm text-ok">
-              Password updated. Taking you to the dashboard
+              Password updated. Taking you to the dashboard…
             </p>
           ) : !sessionReady ? (
             <p className="text-sm text-parchment-dim">
-              Verifying your reset link
+              Verifying your reset link…
             </p>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -137,7 +141,7 @@ export default function ResetPasswordPage() {
                 disabled={loading}
                 className="w-full rounded-lg bg-brass px-3 py-2.5 text-sm font-semibold text-ink-950 transition-colors hover:bg-brass-bright disabled:opacity-60"
               >
-                {loading ? "Updating" : "Update password"}
+                {loading ? "Updating…" : "Update password"}
               </button>
             </form>
           )}

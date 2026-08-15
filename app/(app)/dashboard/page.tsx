@@ -12,7 +12,7 @@ export default async function DashboardPage() {
 
   const { data: employee } = await supabase
     .from("employees")
-    .select("full_name, role, hotel_id")
+    .select("full_name, role")
     .eq("id", user.id)
     .single();
 
@@ -25,32 +25,18 @@ export default async function DashboardPage() {
   const available = rooms?.filter((r) => r.status === "AVAILABLE").length ?? 0;
 
   return (
-    <main className="min-h-screen bg-ink-950">
-      <header className="border-b border-ink-700 bg-ink-900">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-brass-dim bg-ink-800">
-              <span className="font-display text-sm text-brass-bright">01</span>
-            </div>
-            <div>
-              <h1 className="font-display text-lg font-semibold text-parchment">
-                HotelPilot AI
-              </h1>
-              <p className="text-xs text-parchment-dim">
-                {employee?.full_name ?? user.email}
-                {employee?.role === "master_admin" ? " · Master Admin" : " · Staff"}
-              </p>
-            </div>
-          </div>
-          <form action="/auth/logout" method="post">
-            <button className="rounded-lg border border-ink-600 px-3 py-1.5 text-sm text-parchment-dim transition-colors hover:border-brass-dim hover:text-parchment">
-              Log out
-            </button>
-          </form>
-        </div>
+    <main className="min-h-screen">
+      <header className="border-b border-ink-700 bg-ink-900 px-6 py-4">
+        <h1 className="font-display text-lg font-semibold text-parchment">
+          Dashboard
+        </h1>
+        <p className="text-xs text-parchment-dim">
+          {employee?.full_name ?? user.email}
+          {employee?.role === "master_admin" ? " · Master Admin" : " · Staff"}
+        </p>
       </header>
 
-      <div className="mx-auto max-w-5xl px-6 py-8">
+      <div className="px-6 py-8">
         <section className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
           <StatCard label="Occupied" value={occupied} accent="ok" />
           <StatCard label="Available" value={available} accent="brass" />
