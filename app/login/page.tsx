@@ -1,44 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { signIn } from "@/lib/actions/auth";
 
 export default function LoginPage() {
   const router = useRouter();
-  const supabase = createClient();
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function handleSubmit(formData: FormData) {
     setError(null);
-    setLoading(true);
-
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    startTransition(async () => {
+      const result = await signIn(formData);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.push("/dashboard");
+      router.refresh();
     });
-
-    setLoading(false);
-
-    if (signInError) {
-      setError("That email or password isn't right. Try again.");
-      return;
-    }
-
-    router.push("/dashboard");
-    router.refresh();
   }
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-ink-950 px-4 py-12">
       <div className="w-full max-w-sm">
-        {/* Signature: a numbered brass key tag, like a room key fob */}
         <div className="mb-8 flex flex-col items-center text-center">
           <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-brass-dim bg-ink-800">
             <span className="font-display text-lg text-brass-bright">01</span>
@@ -47,31 +34,34 @@ export default function LoginPage() {
             HotelPilot AI
           </h1>
           <p className="mt-1 text-sm text-parchment-dim">
-            Sign in with your staff account
+            Sign in with your staff ID
           </p>
         </div>
 
         <form
-          onSubmit={handleSubmit}
+          action={handleSubmit}
           className="rounded-2xl border border-ink-600 bg-ink-900 p-6 shadow-xl shadow-black/30"
         >
           <div className="space-y-4">
             <div>
               <label
-                htmlFor="email"
+                htmlFor="identifier"
                 className="mb-1.5 block text-sm font-medium text-parchment"
               >
-                Email
+                Staff ID
               </label>
               <input
-                id="email"
-                type="email"
+                id="identifier"
+                name="identifier"
+                type="text"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="e.g. ST001"
                 autoComplete="username"
                 className="w-full rounded-lg border border-ink-600 bg-ink-950 px-3 py-2.5 text-base text-parchment placeholder:text-parchment-dim/50 focus:border-brass focus:outline-none"
               />
+              <p className="mt-1 text-xs text-parchment-dim">
+                Master Admin: sign in with your email instead.
+              </p>
             </div>
 
             <div>
@@ -83,10 +73,9 @@ export default function LoginPage() {
               </label>
               <input
                 id="password"
+                name="password"
                 type="password"
                 required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
                 className="w-full rounded-lg border border-ink-600 bg-ink-950 px-3 py-2.5 text-base text-parchment placeholder:text-parchment-dim/50 focus:border-brass focus:outline-none"
               />
@@ -103,10 +92,10 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={isPending}
               className="w-full rounded-lg bg-brass px-3 py-2.5 text-sm font-semibold text-ink-950 transition-colors hover:bg-brass-bright disabled:opacity-60"
             >
-              {loading ? "Signing in…" : "Sign in"}
+              {isPending ? "Signing in…" : "Sign in"}
             </button>
 
             <p className="text-center text-sm">
@@ -121,7 +110,7 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-6 text-center text-xs leading-relaxed text-parchment-dim">
-          Accounts are created by the hotel administrator.
+          Staff accounts are created by the hotel administrator.
           <br />
           There is no public sign-up — this keeps every action traceable
           to a real person.
