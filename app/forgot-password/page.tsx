@@ -29,7 +29,7 @@ export default function ForgotPasswordPage() {
     if (!resetError) {
       setSent(true);
     } else {
-      setError("Something went wrong. Please try again.");
+      console.error("Reset password error:", resetError); setError(`Error: ${resetError.message}`);
     }
   }
 
