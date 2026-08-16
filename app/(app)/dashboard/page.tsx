@@ -66,7 +66,11 @@ export default async function DashboardPage() {
         </h1>
         <p className="text-xs text-parchment-dim">
           {employee?.full_name ?? user.email}
-          {employee?.role === "master_admin" ? " · 👑 Master Admin" : " · Staff"}
+          {employee?.role === "master_admin"
+            ? " · 👑 Master Admin"
+            : employee?.role === "staff"
+            ? " · Staff"
+            : " · Unknown role"}
         </p>
       </header>
 
