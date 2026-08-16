@@ -1,11 +1,6 @@
-import { ComingSoon } from "@/components/coming-soon";
+import { redirect } from "next/navigation";
 
-export default function Page() {
-  return (
-    <ComingSoon
-      title="Check-in / Check-out"
-      stage="Stage 2"
-      description="The daily front-desk workflow: check a guest in, check a guest out, extend a stay."
-    />
-  );
+export default function CheckInCheckOutRedirect() {
+  // Check-in/check-out happens directly from the Reservations list.
+  redirect("/reservations");
 }
