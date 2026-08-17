@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { checkInStay, checkOutStay, recordPayment } from "@/lib/actions/stays";
+import { currencySymbol } from "@/lib/currency";
 
 const STATUS_STYLES: Record<string, string> = {
   RESERVED: "bg-warn/15 text-warn",
@@ -22,6 +23,18 @@ export default async function ReservationsPage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  const { data: employee } = await supabase
+    .from("employees")
+    .select("hotel_id")
+    .eq("id", user.id)
+    .single();
+  const { data: hotel } = await supabase
+    .from("hotels")
+    .select("default_currency")
+    .eq("id", employee?.hotel_id)
+    .single();
+  const symbol = currencySymbol(hotel?.default_currency ?? "DZD");
 
   const { data: stays } = await supabase
     .from("stays_with_details")
@@ -70,14 +83,14 @@ export default async function ReservationsPage() {
                   <td className="px-4 py-3 text-parchment-dim">
                     {new Date(stay.current_checkout_at).toLocaleDateString()}
                   </td>
-                  <td className="px-4 py-3 text-parchment">€{stay.total_amount}</td>
-                  <td className="px-4 py-3 text-parchment">€{stay.amount_paid}</td>
+                  <td className="px-4 py-3 text-parchment">{symbol}{stay.total_amount}</td>
+                  <td className="px-4 py-3 text-parchment">{symbol}{stay.amount_paid}</td>
                   <td
                     className={`px-4 py-3 font-medium ${
                       PAYMENT_STYLES[stay.payment_status] ?? "text-parchment"
                     }`}
                   >
-                    €{stay.balance}
+                    {symbol}{stay.balance}
                   </td>
                   <td className="px-4 py-3">
                     <span
@@ -114,7 +127,7 @@ export default async function ReservationsPage() {
                           </button>
                         </form>
                       )}
-                      <PaymentQuickForm stayId={stay.id} />
+                      <PaymentQuickForm stayId={stay.id} symbol={symbol} />
                     </div>
                   </td>
                 </tr>
@@ -138,7 +151,7 @@ export default async function ReservationsPage() {
   );
 }
 
-function PaymentQuickForm({ stayId }: { stayId: string }) {
+function PaymentQuickForm({ stayId, symbol }: { stayId: string; symbol: string }) {
   async function action(formData: FormData) {
     "use server";
     formData.set("stay_id", stayId);
@@ -152,7 +165,7 @@ function PaymentQuickForm({ stayId }: { stayId: string }) {
         name="amount"
         step="0.01"
         min="0.01"
-        placeholder="€"
+        placeholder={symbol}
         required
         className="w-16 rounded-lg border border-ink-600 bg-ink-950 px-2 py-1 text-xs text-parchment placeholder:text-parchment-dim/50 focus:border-brass focus:outline-none"
       />

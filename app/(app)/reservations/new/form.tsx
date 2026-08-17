@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import Link from "next/link";
+import { currencySymbol } from "@/lib/currency";
+import type { ActionResult } from "@/lib/actions/stays";
 
 type Room = { id: string; room_number: string; price: number; status: string };
 type Guest = { id: string; full_name: string; phone: string | null };
@@ -9,12 +11,19 @@ type Guest = { id: string; full_name: string; phone: string | null };
 export function NewBookingForm({
   rooms,
   guests,
+  currency,
   action,
 }: {
   rooms: Room[];
   guests: Guest[];
-  action: (formData: FormData) => void;
+  currency: string;
+  action: (
+    prevState: ActionResult | null,
+    formData: FormData
+  ) => Promise<ActionResult>;
 }) {
+  const [state, formAction, isPending] = useActionState(action, null);
+
   const [guestMode, setGuestMode] = useState<"existing" | "new">(
     guests.length > 0 ? "existing" : "new"
   );
@@ -22,6 +31,8 @@ export function NewBookingForm({
   const [arrival, setArrival] = useState("");
   const [checkout, setCheckout] = useState("");
   const [roomPrice, setRoomPrice] = useState(rooms[0]?.price ?? 0);
+
+  const symbol = currencySymbol(currency);
 
   const nights = useMemo(() => {
     if (!arrival || !checkout) return 0;
@@ -51,7 +62,7 @@ export function NewBookingForm({
 
   return (
     <form
-      action={action}
+      action={formAction}
       className="mx-auto max-w-lg space-y-5 rounded-2xl border border-ink-700 bg-ink-900 p-6"
     >
       <div>
@@ -133,7 +144,7 @@ export function NewBookingForm({
           </option>
           {rooms.map((r) => (
             <option key={r.id} value={r.id}>
-              Room {r.room_number} ({r.status}) — €{r.price}/night
+              Room {r.room_number} ({r.status}) — {symbol}{r.price}/night
             </option>
           ))}
         </select>
@@ -185,7 +196,7 @@ export function NewBookingForm({
         </div>
         <div>
           <label className="mb-1.5 block text-sm font-medium text-parchment">
-            Room price / night
+            Room price / night ({currency})
           </label>
           <input
             type="number"
@@ -203,9 +214,12 @@ export function NewBookingForm({
 
       <div className="rounded-lg border border-ink-600 bg-ink-950 px-3 py-2.5 text-sm text-parchment-dim">
         {nights > 0
-          ? `${nights} night${nights === 1 ? "" : "s"} × €${roomPrice} = `
+          ? `${nights} night${nights === 1 ? "" : "s"} × ${symbol}${roomPrice} = `
           : "Total: "}
-        <span className="font-medium text-parchment">€{total.toFixed(2)}</span>
+        <span className="font-medium text-parchment">
+          {symbol}
+          {total.toFixed(2)}
+        </span>
         <input type="hidden" name="total_amount" value={total} />
       </div>
 
@@ -236,11 +250,21 @@ export function NewBookingForm({
         />
       </div>
 
+      {state && !state.ok && (
+        <p
+          role="alert"
+          className="rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-parchment"
+        >
+          {state.error}
+        </p>
+      )}
+
       <button
         type="submit"
-        className="w-full rounded-lg bg-brass px-3 py-2.5 text-sm font-semibold text-ink-950 transition-colors hover:bg-brass-bright"
+        disabled={isPending}
+        className="w-full rounded-lg bg-brass px-3 py-2.5 text-sm font-semibold text-ink-950 transition-colors hover:bg-brass-bright disabled:cursor-not-allowed disabled:opacity-60"
       >
-        Save booking
+        {isPending ? "Saving…" : "Save booking"}
       </button>
     </form>
   );

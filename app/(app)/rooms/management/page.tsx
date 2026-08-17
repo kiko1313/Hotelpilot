@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { createRoom, updateRoomPrice } from "@/lib/actions/rooms";
+import { currencySymbol } from "@/lib/currency";
 
 export default async function RoomManagementPage() {
   const supabase = await createClient();
@@ -11,10 +12,17 @@ export default async function RoomManagementPage() {
 
   const { data: me } = await supabase
     .from("employees")
-    .select("role")
+    .select("role, hotel_id")
     .eq("id", user.id)
     .single();
   if (me?.role !== "master_admin") redirect("/dashboard");
+
+  const { data: hotel } = await supabase
+    .from("hotels")
+    .select("default_currency")
+    .eq("id", me.hotel_id)
+    .single();
+  const symbol = currencySymbol(hotel?.default_currency ?? "DZD");
 
   const { data: rooms } = await supabase
     .from("rooms")
@@ -55,7 +63,7 @@ export default async function RoomManagementPage() {
                       }}
                       className="flex items-center gap-2"
                     >
-                      <span className="text-parchment-dim">€</span>
+                      <span className="text-parchment-dim">{symbol}</span>
                       <input
                         type="number"
                         name="price"

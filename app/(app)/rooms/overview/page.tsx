@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { currencySymbol } from "@/lib/currency";
 
 export default async function RoomOverviewPage() {
   const supabase = await createClient();
@@ -7,6 +8,18 @@ export default async function RoomOverviewPage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  const { data: employee } = await supabase
+    .from("employees")
+    .select("hotel_id")
+    .eq("id", user.id)
+    .single();
+  const { data: hotel } = await supabase
+    .from("hotels")
+    .select("default_currency")
+    .eq("id", employee?.hotel_id)
+    .single();
+  const symbol = currencySymbol(hotel?.default_currency ?? "DZD");
 
   const { data: rooms } = await supabase
     .from("rooms")
@@ -56,7 +69,7 @@ export default async function RoomOverviewPage() {
                 {stay && (
                   <p className="mt-1 truncate text-xs text-parchment">{stay.guest_name}</p>
                 )}
-                <p className="mt-2 text-xs text-parchment-dim">€{room.price}/night</p>
+                <p className="mt-2 text-xs text-parchment-dim">{symbol}{room.price}/night</p>
               </div>
             );
           })}

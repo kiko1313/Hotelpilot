@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { currencySymbol } from "@/lib/currency";
 
 export default async function PaymentsPage() {
   const supabase = await createClient();
@@ -7,6 +8,18 @@ export default async function PaymentsPage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  const { data: employee } = await supabase
+    .from("employees")
+    .select("hotel_id")
+    .eq("id", user.id)
+    .single();
+  const { data: hotel } = await supabase
+    .from("hotels")
+    .select("default_currency")
+    .eq("id", employee?.hotel_id)
+    .single();
+  const symbol = currencySymbol(hotel?.default_currency ?? "DZD");
 
   const { data: payments } = await supabase
     .from("payments")
@@ -25,7 +38,7 @@ export default async function PaymentsPage() {
           Payments
         </h1>
         <p className="text-xs text-parchment-dim">
-          {payments?.length ?? 0} payments · €{total.toFixed(2)} total shown
+          {payments?.length ?? 0} payments · {symbol}{total.toFixed(2)} total shown
         </p>
       </header>
 
@@ -59,7 +72,7 @@ export default async function PaymentsPage() {
                     <td className="px-4 py-3 text-parchment-dim">
                       {(room as { room_number?: string })?.room_number ?? "—"}
                     </td>
-                    <td className="px-4 py-3 font-medium text-ok">€{p.amount}</td>
+                    <td className="px-4 py-3 font-medium text-ok">{symbol}{p.amount}</td>
                     <td className="px-4 py-3 text-parchment-dim">
                       {(emp as { full_name?: string })?.full_name ?? "—"}
                     </td>

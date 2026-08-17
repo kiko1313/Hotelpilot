@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { currencySymbol } from "@/lib/currency";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -12,9 +13,16 @@ export default async function DashboardPage() {
 
   const { data: employee } = await supabase
     .from("employees")
-    .select("full_name, role")
+    .select("full_name, role, hotel_id")
     .eq("id", user.id)
     .single();
+
+  const { data: hotel } = await supabase
+    .from("hotels")
+    .select("default_currency")
+    .eq("id", employee?.hotel_id)
+    .single();
+  const symbol = currencySymbol(hotel?.default_currency ?? "DZD");
 
   const { data: rooms } = await supabase
     .from("rooms")
@@ -86,7 +94,7 @@ export default async function DashboardPage() {
           <StatCard label="Checkouts today" value={checkoutsToday} accent="neutral" />
           <StatCard
             label="Outstanding balance"
-            value={`€${outstanding.toFixed(2)}`}
+            value={`${symbol}${outstanding.toFixed(2)}`}
             accent={outstanding > 0 ? "danger" : "ok"}
           />
         </section>

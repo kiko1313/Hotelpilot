@@ -160,7 +160,17 @@ async function askDeepSeek(
     });
 
     if (!response.ok) {
-      return { ok: false, error: "AI service error. Try again shortly." };
+      let detail = "";
+      try {
+        detail = (await response.text()).slice(0, 200);
+      } catch {
+        // ignore
+      }
+      console.error("AI provider error", response.status, detail);
+      return {
+        ok: false,
+        error: `AI service error (${response.status}). ${detail || "Try again shortly."}`,
+      };
     }
 
     const data = await response.json();
@@ -223,7 +233,17 @@ async function askAnthropic(
     });
 
     if (!response.ok) {
-      return { ok: false, error: "AI service error. Try again shortly." };
+      let detail = "";
+      try {
+        detail = (await response.text()).slice(0, 200);
+      } catch {
+        // ignore
+      }
+      console.error("AI provider error", response.status, detail);
+      return {
+        ok: false,
+        error: `AI service error (${response.status}). ${detail || "Try again shortly."}`,
+      };
     }
 
     const data = await response.json();
@@ -286,7 +306,9 @@ export async function askHotelPilotAI(question: string): Promise<AskAIResult> {
       return await askAnthropic(supabase, apiKey, model, systemPrompt, question);
     }
     return { ok: false, error: `Unknown AI_PROVIDER "${provider}". Use "deepseek" or "anthropic".` };
-  } catch {
-    return { ok: false, error: "Could not reach the AI service." };
+  } catch (e) {
+    console.error("AI assistant error", e);
+    const message = e instanceof Error ? e.message : "Unknown error";
+    return { ok: false, error: `Could not reach the AI service: ${message}` };
   }
 }

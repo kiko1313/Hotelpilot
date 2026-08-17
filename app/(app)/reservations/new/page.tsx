@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { createBooking } from "@/lib/actions/stays";
+import { createBooking, type ActionResult } from "@/lib/actions/stays";
 import { NewBookingForm } from "./form";
 
 export default async function NewBookingPage() {
@@ -9,6 +9,18 @@ export default async function NewBookingPage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  const { data: employee } = await supabase
+    .from("employees")
+    .select("hotel_id")
+    .eq("id", user.id)
+    .single();
+
+  const { data: hotel } = await supabase
+    .from("hotels")
+    .select("default_currency")
+    .eq("id", employee?.hotel_id)
+    .single();
 
   const { data: rooms } = await supabase
     .from("rooms")
@@ -20,12 +32,16 @@ export default async function NewBookingPage() {
     .select("id, full_name, phone")
     .order("full_name");
 
-  async function action(formData: FormData) {
+  async function action(
+    _prevState: ActionResult | null,
+    formData: FormData
+  ): Promise<ActionResult> {
     "use server";
     const result = await createBooking(formData);
     if (result.ok) {
       redirect("/reservations");
     }
+    return result;
   }
 
   return (
@@ -40,6 +56,7 @@ export default async function NewBookingPage() {
         <NewBookingForm
           rooms={rooms ?? []}
           guests={guests ?? []}
+          currency={hotel?.default_currency ?? "DZD"}
           action={action}
         />
       </div>
