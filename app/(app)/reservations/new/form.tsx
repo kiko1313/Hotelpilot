@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 
 type Room = { id: string; room_number: string; price: number; status: string };
 type Guest = { id: string; full_name: string; phone: string | null };
@@ -31,6 +32,22 @@ export function NewBookingForm({
   }, [arrival, checkout]);
 
   const total = nights * roomPrice;
+
+  if (rooms.length === 0) {
+    return (
+      <div className="mx-auto max-w-lg rounded-2xl border border-warn/40 bg-warn/10 p-6 text-center">
+        <p className="mb-3 text-sm text-parchment">
+          No rooms have been added yet — a booking needs a room to assign.
+        </p>
+        <Link
+          href="/rooms/management"
+          className="inline-block rounded-lg bg-brass px-4 py-2 text-sm font-semibold text-ink-950 transition-colors hover:bg-brass-bright"
+        >
+          Add rooms first
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <form
@@ -111,6 +128,9 @@ export function NewBookingForm({
           }}
           className="w-full rounded-lg border border-ink-600 bg-ink-950 px-3 py-2.5 text-sm text-parchment focus:border-brass focus:outline-none"
         >
+          <option value="" disabled>
+            Select a room…
+          </option>
           {rooms.map((r) => (
             <option key={r.id} value={r.id}>
               Room {r.room_number} ({r.status}) — €{r.price}/night
@@ -159,6 +179,7 @@ export function NewBookingForm({
             min={1}
             defaultValue={1}
             required
+            onFocus={(e) => e.target.select()}
             className="w-full rounded-lg border border-ink-600 bg-ink-950 px-3 py-2.5 text-sm text-parchment focus:border-brass focus:outline-none"
           />
         </div>
@@ -171,9 +192,11 @@ export function NewBookingForm({
             name="room_price"
             step="0.01"
             required
-            value={roomPrice}
-            onChange={(e) => setRoomPrice(Number(e.target.value))}
-            className="w-full rounded-lg border border-ink-600 bg-ink-950 px-3 py-2.5 text-sm text-parchment focus:border-brass focus:outline-none"
+            value={roomPrice === 0 ? "" : roomPrice}
+            placeholder="0"
+            onFocus={(e) => e.target.select()}
+            onChange={(e) => setRoomPrice(e.target.value === "" ? 0 : Number(e.target.value))}
+            className="w-full rounded-lg border border-ink-600 bg-ink-950 px-3 py-2.5 text-sm text-parchment placeholder:text-parchment-dim/50 focus:border-brass focus:outline-none"
           />
         </div>
       </div>
@@ -195,8 +218,10 @@ export function NewBookingForm({
           name="deposit"
           step="0.01"
           min="0"
-          defaultValue={0}
-          className="w-full rounded-lg border border-ink-600 bg-ink-950 px-3 py-2.5 text-sm text-parchment focus:border-brass focus:outline-none"
+          defaultValue=""
+          placeholder="0"
+          onFocus={(e) => e.target.select()}
+          className="w-full rounded-lg border border-ink-600 bg-ink-950 px-3 py-2.5 text-sm text-parchment placeholder:text-parchment-dim/50 focus:border-brass focus:outline-none"
         />
       </div>
 
