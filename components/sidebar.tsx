@@ -47,8 +47,13 @@ const MAIN_NAV: NavItem[] = [
     ],
   },
   { label: "Reports", href: "/reports", icon: "📊" },
-  { label: "AI Assistant", href: "/ai", icon: "🤖" },
 ];
+
+const OPS_AGENT_NAV: NavItem = {
+  label: "Operations Assistant",
+  href: "/ai",
+  icon: "🤖",
+};
 
 const ADMIN_NAV: NavItem = {
   label: "Admin",
@@ -66,7 +71,7 @@ const ADMIN_NAV: NavItem = {
 
 export function Sidebar({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname();
-  const items = isAdmin ? [...MAIN_NAV, ADMIN_NAV] : MAIN_NAV;
+  const items = isAdmin ? [...MAIN_NAV, OPS_AGENT_NAV, ADMIN_NAV] : MAIN_NAV;
 
   return (
     <nav className="flex h-full w-64 flex-col border-r border-ink-700 bg-ink-900">
